@@ -1,0 +1,10 @@
+web:
+  image: nginx
+  volumes:
+  - /var/lib/jenkins/workspace/Docker-Web-Deploy:/var/www/html
+  ports:
+   - "3000:80"
+  container_name: API_web
+  environment:
+   - NGINX_HOST=foobar.com
+   - NGINX_PORT=80
