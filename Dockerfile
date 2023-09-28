@@ -1,7 +1,7 @@
-FROM centos:latest
-MAINTAINER choudharysirvi1212@gmail.com
-RUN yum install httpd git -y
-RUN git clone https://github.com/praveensirvi1212/webdev /var/www/html
-WORKDIR /var/www/html
-CMD ["/usr/sbin/httpd","-D","FOREGROUND"]
+FROM ubuntu:latest
+LABEL maintainer="Your Name gouravgaur270@gmail.com"
+LABEL description="This is a simple Dockerfile example that uses the LABEL and EXPOSE instructions."
+RUN apt-get update && \
+    apt-get install -y nginx
 EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
