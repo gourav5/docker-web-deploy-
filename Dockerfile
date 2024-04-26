@@ -4,7 +4,7 @@ LABEL description="This is a simple Dockerfile example that uses the LABEL and E
 RUN apt-get update
 RUN apt-get install -y vim
 COPY web.conf /etc/nginx/sites-available/
-RUN ln -s /etc/nginx/sites-available/web.conf /etc/nginx/sites-enabled/
+CMD  ln -sf /etc/nginx/sites-available/web.conf /etc/nginx/sites-enabled/
 COPY . /var/www/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
