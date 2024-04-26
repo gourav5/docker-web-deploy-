@@ -5,6 +5,3 @@ services:
     ports:
       - "5050:5050"
     container_name: API_web
-    environment:
-      - NGINX_HOST=foobar.com
-      - NGINX_PORT=80
