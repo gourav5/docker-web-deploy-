@@ -2,6 +2,7 @@ version: "3.9"
 services:
   web:
     image: web_api_nginx_v1:latest
+    copy: .:/var/www/html
     ports:
       - "5050:5050"
     container_name: API_web
