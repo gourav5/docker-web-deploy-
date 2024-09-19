@@ -1,9 +1,11 @@
-version: "3.9"
+version: "3"
 services:
   web:
     image: web_api_nginx_v1:latest
+    deploy:
+      replicas: 2
     volumes:
       - .:/var/www/html
     ports:
       - "5050:5050"
-    container_name: API_web
+        #   container_name: WEB_APP_API
