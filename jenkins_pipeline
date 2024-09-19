@@ -1,0 +1,32 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Pull') {
+            steps {
+                echo 'Container Deployment'
+            }
+        }
+        
+        stage('Build image') {
+            steps {
+                git url: 'https://github.com/gourav5/docker-web-deploy-.git', branch: 'main'
+                sh 'docker build -t web_api_nginx_v1:latest .'
+                
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                sh   'docker stop API_web && docker rm -fv API_web | docker compose up -d'
+                echo 'Docker-compose-build Build Image Completed'
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                sh 'curl -i 172.31.104.151:5050'
+            }
+        }
+    }
+}
