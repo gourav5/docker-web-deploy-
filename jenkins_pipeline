@@ -1,32 +1,85 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = "hello-app"
+        IMAGE_TAG = "build-${BUILD_NUMBER}" // Unique tag for each build
+        WORKING_IMAGE = "latest-successful" // Tag for the last successful image
+        CONTAINER_NAME = "web-app"
+    }
+
     stages {
-        stage('Pull') {
-            steps {
-                echo 'Container Deployment'
-            }
-        }
-        
-        stage('Build image') {
+        stage('Checkout Code') {
             steps {
                 git url: 'https://github.com/gourav5/docker-web-deploy-.git', branch: 'main'
-                sh 'docker build -t web_api_nginx_v1:latest .'
-                
             }
         }
-        
-        stage('Deploy') {
+
+        stage('Clean Previous Containers/Images') {
             steps {
-                sh   'docker stop API_web && docker rm -fv API_web | docker compose up -d'
-                echo 'Docker-compose-build Build Image Completed'
+                script {
+                    // Stop and remove previous container if exists (but keep the working one)
+                    sh '''
+                    docker rm -f ${CONTAINER_NAME} || true
+                    docker image prune -f
+                    '''
+                }
             }
         }
-        
-        stage('Test') {
+
+        stage('Build Docker Image') {
             steps {
-                sh 'curl -i 172.31.104.151:5050'
+                script {
+                    try {
+                        // Build new Docker image
+                        sh '''
+                        docker build -t ${DOCKER_IMAGE}:${IMAGE_TAG} .
+                        '''
+                    } catch (Exception e) {
+                        error "Docker build failed"
+                    }
+                }
             }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    try {
+                        // Run container from the latest image
+                        sh '''
+                        docker run -d --name ${CONTAINER_NAME} -p 8080:5050 ${DOCKER_IMAGE}:${IMAGE_TAG}
+                        '''
+                        // Tag the new image as working if it succeeds
+                        sh '''
+                        docker tag ${DOCKER_IMAGE}:${IMAGE_TAG} ${DOCKER_IMAGE}:${WORKING_IMAGE}
+                        '''
+                    } catch (Exception e) {
+                        // Restart the last working container on failure
+                        echo "Failed to start the new container. Rolling back to the previous version."
+                        sh "docker rm -f ${CONTAINER_NAME} || true"
+                        sh '''
+                        docker run -d --name ${CONTAINER_NAME} -p 4040:5050 ${DOCKER_IMAGE}:${WORKING_IMAGE}
+                        '''
+                        error "Rollback to last working container."
+                    }
+                }
+            }
+        }
+
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline finished."
+        }
+        failure {
+            echo "Pipeline failed. Review the logs for details."
         }
     }
 }
